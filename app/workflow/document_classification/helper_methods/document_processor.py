@@ -45,25 +45,7 @@ def extract_document_content(file_path: str) -> Dict[str, Any]:
                 extraction_method = 'text_file'
                 
         except Exception as pdf_error:
-            # Fallback to simple extractor
-            try:
-                from simple_text_extractor import extract_text_content
-                
-                result = extract_text_content(str(file_path))
-                content = result.get('text', '')
-                extraction_method = f"simple_{result.get('extraction_method', 'fallback')}"
-                
-                if result.get('error') and not content:
-                    raise Exception(f"Simple extractor failed: {result['error']}")
-                    
-            except Exception as simple_error:
-                # Final fallback - direct file reading
-                try:
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        content = f.read()
-                    extraction_method = 'direct_read'
-                except Exception as read_error:
-                    raise Exception(f"All extraction methods failed. PDF: {pdf_error}, Simple: {simple_error}, Direct: {read_error}")
+            raise Exception(f"Extraction methods failed. PDF: {pdf_error}")
         
         return {
             "content": content,
