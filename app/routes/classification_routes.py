@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
-from typing import Dict, Any, List, Optional
 
 from app.utils.file_downloader import FileDownloader
 from app.config import DOCUMENTS_DIR, BACKEND_URL
@@ -8,9 +7,9 @@ from app.utils.logging import get_logger
 from app.utils.thread_manager import thread_manager
 from app.utils.storage import LocalStorageManager
 from app.workflow.document_classification.document_classification_workflow import DocumentClassificationWorkflow
-from app.serializers.api.classification_request import DocumentClassificationRequest, ProjectMetadata
+from app.serializers.api.classification_request import DocumentClassificationRequest
 from app.serializers.api.classification_response import DocumentClassificationResponse, ClassificationStatusResponse
-from app.serializers.api.project_metadata import EnhancedClassificationRequest, Project
+from app.services.project_metadata_extractor import EnhancedClassificationRequest
 
 router = APIRouter()
 logger = get_logger(__name__)
