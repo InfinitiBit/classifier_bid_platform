@@ -56,7 +56,7 @@ class TextExtractor:
         elements = partition_pdf(
             filename=pdf_path,
             include_metadata=True,
-            strategy="auto",
+            strategy="fast",
             extract_images_in_pdf=False
         )
 

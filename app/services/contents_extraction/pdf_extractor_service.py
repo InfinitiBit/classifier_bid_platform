@@ -26,7 +26,7 @@ class PDFExtractor:
         self.text_extractor = TextExtractor()
 
     def process_pdf(self, pdf_path: str, task_id: Optional[str] = None, file_id: Optional[str] = None,
-                    method: str = 'pymupdf') -> Dict:
+                    method: str = 'unstructured') -> Dict:
         """
         Process a single PDF file with proper directory structure verification.
 
@@ -138,7 +138,7 @@ class PDFExtractor:
             self.logger.error(f"Content extraction failed: {str(e)}")
             raise
 
-    def process_directory(self, dir_path: Union[str, Path], method: str = 'pymupdf') -> Dict[str, Dict]:
+    def process_directory(self, dir_path: Union[str, Path], method: str = 'unstructured') -> Dict[str, Dict]:
         """Process all PDFs in a directory."""
         # Method implementation unchanged
         dir_path = Path(dir_path)
@@ -166,7 +166,7 @@ class PDFExtractor:
 
         return results
 
-    def process_files(self, pdf_paths: List[Union[str, Path]], method: str = 'pymupdf') -> Dict[str, Dict]:
+    def process_files(self, pdf_paths: List[Union[str, Path]], method: str = 'unstructured') -> Dict[str, Dict]:
         """Process a list of PDF files."""
         # Method implementation unchanged
         results = {}
@@ -364,7 +364,7 @@ class PDFExtractor:
         """
         try:
             # Use the main process_pdf method
-            result = self.process_pdf(file_path, method='pymupdf')
+            result = self.process_pdf(file_path, method='unstructured')
             
             # Extract text content from the results
             text_elements = result.get('content', {}).get('text', [])
@@ -379,7 +379,7 @@ class PDFExtractor:
             
             return {
                 'text': combined_text.strip(),
-                'extraction_method': result.get('extraction_method', 'pymupdf'),
+                'extraction_method': result.get('extraction_method', 'unstructured'),
                 'file_name': result.get('file_name', ''),
                 'stats': result.get('stats', {})
             }
