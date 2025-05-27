@@ -15,11 +15,6 @@ logger = setup_logging()
 # Add security setup
 security = HTTPBasic()
 
-# In production, use environment variables or secure secret management
-USERS = {
-    "admin": "password123"
-}
-
 
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
     """Verify HTTP Basic Auth credentials"""
