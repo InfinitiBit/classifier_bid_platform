@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  bp-ai-engine:
+    container_name: bp-ai-engine
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8000"
+    volumes:
+      - .:/app
+      - ./logs:/app/logs # Fixed: Changed the volume mount path
+    environment:
+      - CHUNK_SIZE=${CHUNK_SIZE}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FILE=/app/logs/app.log # Fixed: Changed to absolute path
+      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
