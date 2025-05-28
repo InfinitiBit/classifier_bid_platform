@@ -22,23 +22,3 @@ class DocumentClassificationRequest(BaseModel):
     document_url: str = Field(..., description="URL to the document to classify or base64 encoded content")
     project_metadata: ProjectMetadata = Field(..., description="Project metadata for comparison")
     classification_threshold: Optional[float] = Field(0.7, ge=0.0, le=1.0, description="Threshold for relevance classification (0.0-1.0)")
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "task_id": "classify_2025_001",
-                "project_id": "healthcare_ai_project",
-                "document_url": "https://example.com/healthcare-rfp.pdf",
-                "project_metadata": {
-                    "project_type": "AI Development",
-                    "industry": "healthcare",
-                    "technologies": ["python", "tensorflow", "AI", "machine learning"],
-                    "keywords": ["medical", "diagnosis", "healthcare", "patient"],
-                    "budget_range": "€50K-100K",
-                    "timeline": "6 months",
-                    "location": "Germany",
-                    "requirements": ["GDPR compliance", "medical data processing"]
-                },
-                "classification_threshold": 0.7
-            }
-        }
