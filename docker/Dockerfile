@@ -43,7 +43,7 @@ COPY . .
 RUN python3 -c 'import nltk; nltk.data.path.append("/usr/local/share/nltk_data"); from nltk.tokenize import sent_tokenize; print(sent_tokenize("This is a test."))'
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 8001
 
 # Command to run the application
 CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
