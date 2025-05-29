@@ -20,7 +20,7 @@ from app.config import EXTRACTED_DIR
 
 # Import workflow helpers
 from app.workflow.document_classification.helper_methods.document_processor import (
-    extract_document_content, 
+    extract_document_content,
     validate_project_metadata, 
     format_classification_result
 )
@@ -82,33 +82,7 @@ class DocumentClassificationWorkflow:
             logger.info(f"Starting document classification workflow for task: {self.task_id}")
             steps = {}
 
-            # Step 1: Validate project metadata
-            try:
-                logger.info("Step 1: Validating project metadata")
-                metadata_validation = validate_project_metadata(self.project_metadata)
-                
-                if not metadata_validation["is_valid"]:
-                    error_msg = f"Invalid project metadata. Missing: {metadata_validation['missing_fields']}"
-                    return await self._handle_workflow_error(error_msg, "metadata_validation")
-                
-                self.project_metadata = metadata_validation["metadata"]
-                steps["metadata_validation"] = {"status": "completed"}
-                
-                await notify_backend_status(
-                    self.backend_url,
-                    self.task_id,
-                    {
-                        "taskName": "Project Metadata Validated",
-                        "taskFriendlyName": "Project metadata validated successfully",
-                    }
-                )
-                
-            except Exception as e:
-                error_msg = f"Metadata validation failed: {str(e)}"
-                logger.error(error_msg)
-                return await self._handle_workflow_error(error_msg, "metadata_validation")
-
-            # Step 2: Extract document content
+            # Step 1: Extract document content
             try:
                 logger.info("Step 2: Extracting document content")
                 
