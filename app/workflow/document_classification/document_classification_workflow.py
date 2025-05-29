@@ -84,7 +84,7 @@ class DocumentClassificationWorkflow:
 
             # Step 1: Extract document content
             try:
-                logger.info("Step 2: Extracting document content")
+                logger.info("Step 1: Extracting document content")
                 
                 await notify_backend_status(
                     self.backend_url,
@@ -124,9 +124,9 @@ class DocumentClassificationWorkflow:
                 logger.error(error_msg)
                 return await self._handle_workflow_error(error_msg, "content_extraction")
 
-            # Step 3: Fast bypass check
+            # Step 2: Fast bypass check
             try:
-                logger.info("Step 3: Performing fast bypass check")
+                logger.info("Step 2 Performing fast bypass check")
                 
                 # Check if document is too small or empty (fast bypass)
                 if file_size < 1000 or len(document_content.strip()) < 50:
@@ -162,9 +162,9 @@ class DocumentClassificationWorkflow:
             except Exception as e:
                 logger.warning(f"Fast bypass check failed, continuing with full analysis: {str(e)}")
 
-            # Step 4: Agent-based classification
+            # Step 3: Agent-based classification
             try:
-                logger.info("Step 4: Running agent-based classification")
+                logger.info("Step 3: Running agent-based classification")
                 
                 await notify_backend_status(
                     self.backend_url,
@@ -206,9 +206,9 @@ class DocumentClassificationWorkflow:
                 logger.error(error_msg)
                 return await self._handle_workflow_error(error_msg, "agent_classification")
 
-            # Step 5: Format and save final results
+            # Step 4: Format and save final results
             try:
-                logger.info("Step 5: Formatting and saving results")
+                logger.info("Step 4: Formatting and saving results")
                 
                 # Format result for API response
                 formatted_result = format_classification_result(
