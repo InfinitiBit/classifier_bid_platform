@@ -21,7 +21,6 @@ from app.config import EXTRACTED_DIR
 # Import workflow helpers
 from app.workflow.document_classification.helper_methods.document_processor import (
     extract_document_content,
-    validate_project_metadata, 
     format_classification_result
 )
 

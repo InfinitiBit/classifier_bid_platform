@@ -4,6 +4,8 @@ Helper methods for document processing in classification workflow
 import os
 from pathlib import Path
 from typing import Dict, Any, Optional
+import sys
+from app.services.contents_extraction.pdf_extractor_service import PDFExtractor
 
 def extract_document_content(file_path: str) -> Dict[str, Any]:
     """
@@ -17,7 +19,7 @@ def extract_document_content(file_path: str) -> Dict[str, Any]:
     """
     try:
         # Import PDF extractor from existing services
-        import sys
+
         ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
         sys.path.insert(0, str(ROOT_DIR))
         
@@ -28,8 +30,6 @@ def extract_document_content(file_path: str) -> Dict[str, Any]:
         
         # Try full PDF extractor first
         try:
-            from app.services.contents_extraction.pdf_extractor_service import PDFExtractor
-            
             extractor = PDFExtractor()
             
             # Extract content using existing PDF extractor
@@ -64,36 +64,6 @@ def extract_document_content(file_path: str) -> Dict[str, Any]:
             "error": str(e)
         }
 
-def validate_project_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Validate and normalize project metadata
-    
-    Args:
-        metadata (Dict): Project metadata
-        
-    Returns:
-        Dict with validation results and normalized metadata
-    """
-    required_fields = ['project_type', 'industry']
-    missing_fields = []
-    
-    for field in required_fields:
-        if not metadata.get(field):
-            missing_fields.append(field)
-    
-    # Normalize lists
-    normalized_metadata = metadata.copy()
-    for field in ['technologies', 'keywords', 'requirements']:
-        if field in normalized_metadata and isinstance(normalized_metadata[field], str):
-            normalized_metadata[field] = [normalized_metadata[field]]
-        elif field not in normalized_metadata:
-            normalized_metadata[field] = []
-    
-    return {
-        "is_valid": len(missing_fields) == 0,
-        "missing_fields": missing_fields,
-        "metadata": normalized_metadata
-    }
 
 def format_classification_result(
     result: Dict[str, Any], 
