@@ -18,6 +18,7 @@ from app.utils.backend_notify_status import notify_backend_status
 from app.utils.logging import setup_logging
 from app.agent_tasks.document_classification.document_classification_task import DocumentClassificationTask
 from app.config import EXTRACTED_DIR
+from app.serializers.api.classification_request import Project
 
 # Import workflow helpers
 from app.workflow.document_classification.helper_methods.document_processor import (
@@ -43,7 +44,7 @@ class DocumentClassificationWorkflow:
         project_id: str,
         backend_url: str,
         file_path: str,
-        project_metadata: Dict[str, Any],
+        project: Project,  # Changed from project_metadata dict to Project object
         classification_threshold: float = 0.7
     ):
         """
@@ -54,16 +55,20 @@ class DocumentClassificationWorkflow:
             project_id (str): Project identifier
             backend_url (str): URL for backend API
             file_path (str): Path to the document file
-            project_metadata (Dict): Project metadata for comparison
+            project (Project): Project object containing all project data
             classification_threshold (float): Threshold for relevance classification
         """
         self.task_id = task_id
         self.project_id = project_id
         self.backend_url = backend_url
         self.file_path = file_path
-        self.project_metadata = project_metadata
+        self.project = project
         self.classification_threshold = classification_threshold
         self.base_dir = EXTRACTED_DIR
+
+        # Extract metadata from project object
+        self.project_metadata = self._extract_project_metadata(project)
+        logger.info(f"Extracted project metadata: {self.project_metadata}")
 
         # Track workflow data for final report
         self.workflow_data = {
@@ -86,6 +91,38 @@ class DocumentClassificationWorkflow:
         )
 
         logger.info(f"Initialized DocumentClassificationWorkflow for task: {task_id}")
+
+    def _extract_project_metadata(self, project: Project) -> Dict[str, Any]:
+        """Extract metadata from project for classification"""
+        # Start with basic project information
+        metadata = {
+            "project_id": project.id,
+            "project_name": project.projectName or project.opportunityName or "Unnamed Project",
+            "description": project.description or "",
+            "status": project.status,
+            "current_stage": project.currentStage or "",
+            "opportunity_owner": project.opportunityOwner or "",
+            "amount": project.amountInEur or "",
+            "reference_number": project.referenceNumber or ""
+        }
+
+        # Add all metadata items using attributeFriendlyName as key
+        if project.metaData:
+            for item in project.metaData:
+                # Use attributeFriendlyName as the key for agent analysis
+                metadata[item.attributeFriendlyName] = item.attributeValue
+
+        # Add bid manager info if available
+        if project.bidManager:
+            metadata["bid_manager"] = f"{project.bidManager.firstName} {project.bidManager.lastName}"
+            metadata["bid_manager_email"] = project.bidManager.email
+
+            # Process bid manager userData if present
+            if project.bidManager.userData:
+                for user_data in project.bidManager.userData:
+                    metadata[f"bid_manager_{user_data.dataKey}"] = user_data.dataValue
+
+        return metadata
 
     async def _send_status_update(self, status: str, message: str, task_name: str = None):
         """

@@ -193,24 +193,33 @@ class DocumentClassificationTask:
                 agent=self.relevance_agent,
                 description=f"""
                 TODAY'S DATE: {current_time_str}
-                
-                Based on the content quality analysis and document summary, DETERMINE document relevance for our project needs.
-                
-                ANALYZE alignment between document content and project requirements:
-                1. How well does this document match our project scope?
-                2. What specific aspects make it relevant or irrelevant?
-                3. Rate relevance on scale 1-10 with justification
-                4. Consider technology alignment, industry relevance, and project scope matching
-                
+
+                Based on the content quality analysis and document summary, DETERMINE document relevance for the project.
+
+                ANALYZE alignment between document content and ALL project requirements:
+                1. Review each metadata field and assess if the document addresses it
+                2. Consider the project description, stage, and all custom metadata fields
+                3. Evaluate how well the document fits the overall project needs
+                4. Rate relevance on scale 1-10 with detailed justification
+
+                Pay special attention to:
+                - Project-specific requirements mentioned in metadata
+                - Industry/domain alignment
+                - Technical specifications or capabilities
+                - Geographic/location requirements
+                - Budget and timeline constraints
+                - Any specialized criteria in the metadata
+
                 Format your response as:
                 RELEVANCE_SCORE: [1-10]
                 ALIGNMENT: [high/medium/low]
-                REASONING: [specific reasons for the score]
-                MATCHING_ASPECTS: [list what matches between document and project]
-                
-                Project Requirements:
+                REASONING: [detailed explanation of the score]
+                MATCHING_ASPECTS: [list specific matches between document and project metadata]
+                GAPS: [list any project requirements not addressed in document]
+
+                Project Information and Metadata:
                 {metadata_str}
-                
+
                 Use the document summary for analysis rather than full content.
                 """,
                 output_file=str(agents_dir / "relevance_analysis.txt"),
@@ -223,28 +232,35 @@ class DocumentClassificationTask:
                 agent=self.metadata_matching_agent,
                 description=f"""
                 TODAY'S DATE: {current_time_str}
-                
-                COMPARE document characteristics against specific project metadata criteria using the document summary and relevance analysis.
-                
-                EVALUATE matches for:
-                1. Technology alignment (how many of our technologies are mentioned in the summary?)
-                2. Industry relevance (does it fit our industry focus?)
-                3. Project type compatibility (matches our project type?)
-                4. Keyword presence (how many keywords found in summary?)
-                5. Budget and timeline compatibility if specified
-                
+
+                COMPARE document characteristics against project metadata criteria using the document summary and relevance analysis.
+
+                EVALUATE matches between the document content and ALL project metadata fields provided below.
+
+                For each metadata field:
+                1. Check if the concept/requirement is mentioned or addressed in the document
+                2. Assess how well the document aligns with that specific criterion
+                3. Note any exact matches, partial matches, or relevant mentions
+
+                Consider ALL aspects:
+                - Direct mentions of metadata values in the document
+                - Conceptual alignment even if exact terms aren't used
+                - Industry/domain relevance based on metadata
+                - Technical requirements or specifications matching
+                - Budget/timeline compatibility if mentioned
+                - Geographic or location relevance
+                - Any other project-specific criteria
+
                 Format your response as:
-                TECHNOLOGY_MATCH: [percentage]% - [list matched technologies]
-                INDUSTRY_MATCH: [high/medium/low] - [explanation]
-                PROJECT_TYPE_MATCH: [yes/no] - [reasoning]
-                KEYWORD_MATCH: [count]/[total] keywords found - [list found keywords]
-                BUDGET_TIMELINE_MATCH: [compatible/not_specified/incompatible] - [explanation]
-                OVERALL_SCORE: [0.0-1.0] - [calculated based on all matches]
-                FINAL_RECOMMENDATION: [RELEVANT/NOT_RELEVANT] - [justification]
-                
+                METADATA_MATCHES: [List each metadata field and whether it matches]
+                ALIGNMENT_SCORE: [0.0-1.0] - Overall alignment score
+                KEY_MATCHES: [List the most important matches found]
+                MISSING_ELEMENTS: [List important metadata criteria not found in document]
+                FINAL_RECOMMENDATION: [RELEVANT/NOT_RELEVANT] - [detailed justification]
+
                 Project Metadata:
                 {metadata_str}
-                
+
                 Use the document summary and previous analyses for evaluation.
                 """,
                 output_file=str(agents_dir / "metadata_matching.txt"),
@@ -297,17 +313,52 @@ class DocumentClassificationTask:
 
     def _format_project_metadata(self, metadata: Dict[str, Any]) -> str:
         """Format project metadata for agent consumption"""
-        formatted = f"""
-Project Type: {metadata.get('project_type', 'Not specified')}
-Industry: {metadata.get('industry', 'Not specified')}
-Technologies: {', '.join(metadata.get('technologies', []))}
-Keywords: {', '.join(metadata.get('keywords', []))}
-Budget Range: {metadata.get('budget_range', 'Not specified')}
-Timeline: {metadata.get('timeline', 'Not specified')}
-Location: {metadata.get('location', 'Not specified')}
-Requirements: {', '.join(metadata.get('requirements', []))}
-        """
-        return formatted.strip()
+        # Start with basic project information
+        formatted_lines = [
+            f"Project Name: {metadata.get('project_name', 'Not specified')}",
+            f"Project ID: {metadata.get('project_id', 'Not specified')}",
+            f"Reference Number: {metadata.get('reference_number', 'Not specified')}",
+            f"Current Stage: {metadata.get('current_stage', 'Not specified')}",
+            f"Opportunity Owner: {metadata.get('opportunity_owner', 'Not specified')}",
+            f"Amount (EUR): {metadata.get('amount', 'Not specified')}",
+            f"Status: {metadata.get('status', 'Not specified')}"
+        ]
+
+        # Add description if present
+        if metadata.get('description'):
+            formatted_lines.append(f"Description: {metadata.get('description')}")
+
+        # Add bid manager info if present
+        if metadata.get('bid_manager'):
+            formatted_lines.append(f"Bid Manager: {metadata.get('bid_manager')}")
+            if metadata.get('bid_manager_email'):
+                formatted_lines.append(f"Bid Manager Email: {metadata.get('bid_manager_email')}")
+
+        # Add all other metadata items (these come from metaData list)
+        formatted_lines.append("\nProject Metadata:")
+
+        # Exclude the basic fields we've already added
+        basic_fields = {
+            'project_id', 'project_name', 'description', 'status',
+            'current_stage', 'opportunity_owner', 'amount', 'reference_number',
+            'bid_manager', 'bid_manager_email'
+        }
+
+        # Add all other metadata fields
+        for key, value in metadata.items():
+            if key not in basic_fields and not key.startswith('bid_manager_'):
+                formatted_lines.append(f"{key}: {value}")
+
+        # Add bid manager user data if present
+        bid_manager_data = [(k, v) for k, v in metadata.items() if
+                            k.startswith('bid_manager_') and k != 'bid_manager_email']
+        if bid_manager_data:
+            formatted_lines.append("\nBid Manager Additional Data:")
+            for key, value in bid_manager_data:
+                clean_key = key.replace('bid_manager_', '').replace('_', ' ').title()
+                formatted_lines.append(f"{clean_key}: {value}")
+
+        return "\n".join(formatted_lines).strip()
 
     def _process_agent_results(self, agents_dir: Path, threshold: float) -> Dict[str, Any]:
         """Process and combine results from all agents"""
@@ -320,55 +371,67 @@ Requirements: {', '.join(metadata.get('requirements', []))}
 
             # Extract final recommendation from metadata matching agent
             is_relevant = "RELEVANT" in metadata_matching.upper() and "NOT_RELEVANT" not in metadata_matching.upper()
-            
+
             # Extract scores using regex patterns
             import re
-            
+
             # Extract relevance score (look for RELEVANCE_SCORE: X pattern)
             relevance_score = 0.5  # default
             score_match = re.search(r'RELEVANCE_SCORE:\s*(\d+)', relevance)
             if score_match:
                 relevance_score = float(score_match.group(1)) / 10.0  # Convert to 0-1 scale
-            
-            # Try to extract overall score from metadata matching
-            overall_score_match = re.search(r'OVERALL_SCORE:\s*([\d.]+)', metadata_matching)
-            if overall_score_match:
-                relevance_score = float(overall_score_match.group(1))
+
+            # Try to extract alignment score from metadata matching
+            alignment_score_match = re.search(r'ALIGNMENT_SCORE:\s*([\d.]+)', metadata_matching)
+            if alignment_score_match:
+                relevance_score = float(alignment_score_match.group(1))
 
             # Extract classification reasons
             reasons = []
-            
+
             # Add summary information
             if "EXECUTIVE_SUMMARY:" in document_summary:
                 summary = document_summary.split("EXECUTIVE_SUMMARY:")[-1].split("\n")[0].strip()
                 reasons.append(f"Document summary: {summary[:150]}...")
-            
+
             # Add relevance reasoning
             if "REASONING:" in relevance:
                 reasoning = relevance.split("REASONING:")[-1].split("\n")[0].strip()
                 reasons.append(f"Relevance analysis: {reasoning[:150]}...")
-            
+
             # Add matching aspects
             if "MATCHING_ASPECTS:" in relevance:
                 matching = relevance.split("MATCHING_ASPECTS:")[-1].split("\n")[0].strip()
                 reasons.append(f"Matching aspects: {matching[:150]}...")
-            
+
+            # Add metadata matches
+            if "KEY_MATCHES:" in metadata_matching:
+                key_matches = metadata_matching.split("KEY_MATCHES:")[-1].split("\n")[0].strip()
+                reasons.append(f"Key metadata matches: {key_matches[:150]}...")
+
             # Add final recommendation reasoning
             if "FINAL_RECOMMENDATION:" in metadata_matching:
                 recommendation_line = metadata_matching.split("FINAL_RECOMMENDATION:")[-1].split("\n")[0].strip()
                 reasons.append(f"Final decision: {recommendation_line[:150]}...")
-            
-            # Extract technologies and keywords found
-            tech_matches = []
-            keyword_matches = []
-            
-            if "TECHNOLOGY_MATCH:" in metadata_matching:
-                tech_line = metadata_matching.split("TECHNOLOGY_MATCH:")[-1].split("\n")[0].strip()
-                tech_matches.append(tech_line)
-            
-            if "KEYWORD_MATCH:" in metadata_matching:
-                keyword_line = metadata_matching.split("KEYWORD_MATCH:")[-1].split("\n")[0].strip()
-                keyword_matches.append(keyword_line)
+
+            # Extract metadata matches and gaps
+            metadata_matches = []
+            missing_elements = []
+
+            if "METADATA_MATCHES:" in metadata_matching:
+                matches_section = metadata_matching.split("METADATA_MATCHES:")[-1].split("ALIGNMENT_SCORE:")[0].strip()
+                metadata_matches = [line.strip() for line in matches_section.split("\n") if line.strip()]
+
+            if "MISSING_ELEMENTS:" in metadata_matching:
+                missing_section = metadata_matching.split("MISSING_ELEMENTS:")[-1].split("FINAL_RECOMMENDATION:")[
+                    0].strip()
+                missing_elements = [line.strip() for line in missing_section.split("\n") if line.strip()]
+
+            # Extract gaps from relevance analysis
+            gaps = []
+            if "GAPS:" in relevance:
+                gaps_section = relevance.split("GAPS:")[-1].strip()
+                gaps = [line.strip() for line in gaps_section.split("\n") if line.strip()]
 
             return {
                 "status": "completed",
@@ -383,8 +446,9 @@ Requirements: {', '.join(metadata.get('requirements', []))}
                     "metadata_matching": metadata_matching
                 },
                 "extracted_info": {
-                    "technology_matches": tech_matches,
-                    "keyword_matches": keyword_matches
+                    "metadata_matches": metadata_matches,
+                    "missing_elements": missing_elements,
+                    "gaps": gaps
                 },
                 "metadata": {
                     "timestamp": datetime.now().isoformat(),
