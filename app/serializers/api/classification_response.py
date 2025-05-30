@@ -2,9 +2,29 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 
+# For report + subtask & failed status like rfq
+
+
+class ReportDetailed(BaseModel):
+    attributeName: str
+    attributeFriendlyName: str
+    attributeValue: str
+
+
 class ClassificationResult(BaseModel):
     """Classification result details"""
-    fileId: str
-    summaryDecision: str  # 'Invalid', 'Irrelevant', 'Not Enough Content'
-    decisionDetails: str  # Why AI thinks it's invalid/irrelevant/etc
-    relevancyPercentage: float = Field(ge=0.0, le=100.0)  # 0-100%
+    taskId: str
+    isValid: bool
+    classificationReport: List[ReportDetailed]
+
+
+class ClassificationResultImmediate(BaseModel):
+    """Classification result details"""
+    task_id = str
+    status = str
+    message = str
+    error = str
+
+    # summaryDecision: str  # 'Invalid', 'Irrelevant', 'Not Enough Content', 'relevent'
+    # decisionDetails: str  # Why AI thinks it's invalid/irrelevant/etc
+    # relevancyPercentage: int # 0-100%
