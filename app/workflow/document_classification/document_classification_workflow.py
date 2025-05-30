@@ -319,10 +319,10 @@ class DocumentClassificationWorkflow:
 
                     # Format for backend
                     formatted_result = final_result.dict()
-                    formatted_result.update({
-                        "task_id": self.task_id,
-                        "project_id": self.project_id
-                    })
+                    # formatted_result.update({
+                    #     "task_id": self.task_id,
+                    #     "project_id": self.project_id
+                    # })
 
                     # Save and notify completion
                     await LocalStorageManager.save_response(self.task_id, formatted_result)
@@ -376,7 +376,7 @@ class DocumentClassificationWorkflow:
                     file_path=self.file_path,
                     classification_threshold=self.classification_threshold
                 )
-                logger.info("classification_result ------------------------- ", classification_result)
+                # logger.info("classification_result ------------------------- ", classification_result)
 
                 if classification_result.get("status") != "completed":
                     error_msg = f"Classification failed: {classification_result.get('error', 'Unknown error')}"
@@ -454,10 +454,10 @@ class DocumentClassificationWorkflow:
 
                 # Format for backend
                 formatted_result = final_result.dict()
-                formatted_result.update({
-                    "task_id": self.task_id,
-                    "project_id": self.project_id
-                })
+                # formatted_result.update({
+                #     "task_id": self.task_id,
+                #     "project_id": self.project_id
+                # })
 
                 # Save to storage
                 await LocalStorageManager.save_response(self.task_id, formatted_result)

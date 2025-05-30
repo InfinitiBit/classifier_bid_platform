@@ -132,40 +132,6 @@ async def classify_document(request: DocumentClassificationRequest):
         return ClassificationResultImmediate(**error_response)
 
 
-@router.get("/classification-status/{task_id}", response_model=ClassificationResultImmediate)
-async def get_classification_status(task_id: str):
-    """Get the status and results of a document classification task"""
-    try:
-        result = await LocalStorageManager.get_response(task_id)
-        if not result:
-            raise HTTPException(status_code=404, detail="Task not found")
-
-        # Map internal storage format to response model format
-        response_data = {
-            "taskId": result.get("taskId", result.get("task_id", task_id)),
-            "status": result.get("status", "unknown"),
-            "message": result.get("message", "Status retrieved"),
-            "error": result.get("error")
-        }
-
-        # Add classification results if available (for completed tasks)
-        if result.get("status") == "completed" and "classificationReport" in result:
-            report = result.get("classificationReport", [])
-            for item in report:
-                if item.get("attributeName") == "summaryDecision":
-                    response_data["summaryDecision"] = item.get("attributeValue")
-                elif item.get("attributeName") == "decisionDetails":
-                    response_data["decisionDetails"] = item.get("attributeValue")
-                elif item.get("attributeName") == "relevancyPercentage":
-                    response_data["relevancyPercentage"] = int(item.get("attributeValue", 0))
-
-        return ClassificationResultImmediate(**response_data)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Error getting classification status: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.get("/health")
 async def health_check():
