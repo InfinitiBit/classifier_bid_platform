@@ -13,7 +13,7 @@ class ReportDetailed(BaseModel):
 class ClassificationResult(BaseModel):
     """Classification result with completion report"""
     isValid: bool
-    classificationReport: List[ReportDetailed]
+    attributes: List[ReportDetailed]
 
 
 class ClassificationStatusResponse(BaseModel):

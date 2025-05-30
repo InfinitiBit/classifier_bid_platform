@@ -111,7 +111,7 @@ class DocumentClassificationWorkflow:
 
         return metadata
 
-    async def _send_status_update(self, status: str, message: str, task_name: str = None):
+    async def _send_status_update(self, taskFriendlyName: str, message: str, task_name: str = None):
         """
         Send real-time status update using classificationStatusResponse model.
 
@@ -122,7 +122,7 @@ class DocumentClassificationWorkflow:
         """
         # Prepare status update data
         status_data = {
-            "status": status,
+            "taskFriendlyName": taskFriendlyName,
             "message": message
         }
 
@@ -137,7 +137,7 @@ class DocumentClassificationWorkflow:
             status_data
         )
 
-        logger.info(f"Status update sent: {status} - {message} (taskName: {task_name})")
+        logger.info(f"Status update sent: {taskFriendlyName} - {message} (taskName: {task_name})")
 
     def _build_completion_report(self, is_fast_bypass: bool = False) -> List[Dict[str, str]]:
         """
@@ -219,7 +219,7 @@ class DocumentClassificationWorkflow:
 
             # Send initial status
             await self._send_status_update(
-                status="processing",
+                taskFriendlyName="processing",
                 message="Document classification workflow started",
                 task_name="workflow_start"
             )
@@ -232,7 +232,7 @@ class DocumentClassificationWorkflow:
 
                 # Send status update
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message="Extracting content from document",
                     task_name="content_extraction"
                 )
@@ -244,7 +244,7 @@ class DocumentClassificationWorkflow:
 
                     # Status update for failure
                     await self._send_status_update(
-                        status="failed",
+                        taskFriendlyName="failed",
                         message=f"Error in content_extraction: {content_result.get('error')}",
                         task_name="task_failed"
                     )
@@ -270,7 +270,7 @@ class DocumentClassificationWorkflow:
 
                 # Status update for success
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message=f"Content extracted successfully: {len(document_content)} characters",
                     task_name="content_extraction_completed"
                 )
@@ -280,7 +280,7 @@ class DocumentClassificationWorkflow:
                 logger.error(error_msg)
 
                 await self._send_status_update(
-                    status="failed",
+                    taskFriendlyName="failed",
                     message=f"Error in content_extraction: {str(e)}",
                     task_name="task_failed"
                 )
@@ -293,7 +293,7 @@ class DocumentClassificationWorkflow:
                 logger.info("Step 2: Performing fast bypass check")
 
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message="Checking document size for fast bypass",
                     task_name="fast_bypass_check"
                 )
@@ -314,7 +314,7 @@ class DocumentClassificationWorkflow:
                     # Create final result
                     final_result = ClassificationResult(
                         isValid=False,
-                        classificationReport=completion_report
+                        attributes=completion_report
                     )
 
                     # Format for backend
@@ -330,7 +330,7 @@ class DocumentClassificationWorkflow:
 
                     # Send final status
                     await self._send_status_update(
-                        status="completed",
+                        taskFriendlyName="completed",
                         message="Document classified via fast bypass: insufficient content",
                         task_name="fast_bypass_completed"
                     )
@@ -351,7 +351,7 @@ class DocumentClassificationWorkflow:
                 steps["fast_bypass"] = {"status": "skipped", "reason": "document_needs_analysis"}
 
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message="Fast bypass skipped - proceeding to full analysis",
                     task_name="fast_bypass_skipped"
                 )
@@ -364,7 +364,7 @@ class DocumentClassificationWorkflow:
                 logger.info("Step 3: Running agent-based classification")
 
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message="AI agents analyzing document relevance",
                     task_name="agent_classification"
                 )
@@ -382,7 +382,7 @@ class DocumentClassificationWorkflow:
                     error_msg = f"Classification failed: {classification_result.get('error', 'Unknown error')}"
 
                     await self._send_status_update(
-                        status="failed",
+                        taskFriendlyName="failed",
                         message=f"Error in agent_classification: {classification_result.get('error')}",
                         task_name="task_failed"
                     )
@@ -412,7 +412,7 @@ class DocumentClassificationWorkflow:
                 # Status update
                 relevance_status = "relevant" if classification_result.get("is_relevant") else "not relevant"
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message=f"Document classified as {relevance_status}",
                     task_name="classification_completed"
                 )
@@ -422,7 +422,7 @@ class DocumentClassificationWorkflow:
                 logger.error(error_msg)
 
                 await self._send_status_update(
-                    status="failed",
+                    taskFriendlyName="failed",
                     message=f"Error in agent_classification: {str(e)}",
                     task_name="task_failed"
                 )
@@ -435,7 +435,7 @@ class DocumentClassificationWorkflow:
                 logger.info("Step 4: Finalizing classification results")
 
                 await self._send_status_update(
-                    status="processing",
+                    taskFriendlyName="processing",
                     message="Finalizing classification results",
                     task_name="finalization"
                 )
@@ -449,7 +449,7 @@ class DocumentClassificationWorkflow:
                 # Create final classification result
                 final_result = ClassificationResult(
                     isValid=classification_result.get("isValid", classification_result.get("is_relevant", False)),
-                    classificationReport=completion_report
+                    attributes=completion_report
                 )
 
                 # Format for backend
@@ -467,7 +467,7 @@ class DocumentClassificationWorkflow:
 
                 # Send final status update
                 await self._send_status_update(
-                    status="completed",
+                    taskFriendlyName="completed",
                     message="Document classification completed successfully",
                     task_name="workflow_completed"
                 )
@@ -484,7 +484,7 @@ class DocumentClassificationWorkflow:
                 logger.error(error_msg)
 
                 await self._send_status_update(
-                    status="failed",
+                    taskFriendlyName="failed",
                     message=f"Error in result_formatting: {str(e)}",
                     task_name="task_failed"
                 )
@@ -497,7 +497,7 @@ class DocumentClassificationWorkflow:
             logger.error(error_msg, exc_info=True)
 
             await self._send_status_update(
-                status="failed",
+                taskFriendlyName="failed",
                 message=f"Error in workflow_execution: {str(e)}",
                 task_name="task_failed"
             )

@@ -20,12 +20,12 @@ class Project(BaseModel):
 
 class UploadedFile(BaseModel):
     """Document information for classification"""
-    Reference: str
-    FileUrl: str
+    reference: str
+    fileUrl: str
 
 
 class DocumentClassificationRequest(BaseModel):
     """Request model for document classification"""
     taskId: str
     project: Project
-    document: UploadedFile
+    uploadedFile: UploadedFile
