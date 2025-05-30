@@ -8,16 +8,6 @@ load_dotenv()
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# API Configuration
-API_V1_STR = "/api/v1"
-PROJECT_NAME = "AI Application"
-
-# ChromaDB Configuration
-CHROMADB_HOST = os.getenv("CHROMADB_HOST", "localhost")
-CHROMADB_PORT = int(os.getenv("CHROMADB_PORT", 8000))
-CHROMADB_PERSIST_DIR = os.getenv("CHROMADB_PERSIST_DIR", str(BASE_DIR / "data" / "chromadb"))
-
-
 # Upload directories
 DOCUMENTS_DIR = BASE_DIR / "uploads" / "documents"
 EXTRACTED_DIR = BASE_DIR / "uploads" / "extracted"

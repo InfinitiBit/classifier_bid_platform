@@ -297,45 +297,26 @@ class DocumentClassificationTask:
             f"Project Name: {metadata.get('project_name', 'Not specified')}",
             f"Project ID: {metadata.get('project_id', 'Not specified')}",
             f"Reference Number: {metadata.get('reference_number', 'Not specified')}",
-            f"Current Stage: {metadata.get('current_stage', 'Not specified')}",
-            f"Opportunity Owner: {metadata.get('opportunity_owner', 'Not specified')}",
-            f"Amount (EUR): {metadata.get('amount', 'Not specified')}",
-            f"Status: {metadata.get('status', 'Not specified')}"
+            f"Bid Manager: {metadata.get('bid_manager', 'Not specified')}"
         ]
 
         # Add description if present
         if metadata.get('description'):
             formatted_lines.append(f"Description: {metadata.get('description')}")
 
-        # Add bid manager info if present
-        if metadata.get('bid_manager'):
-            formatted_lines.append(f"Bid Manager: {metadata.get('bid_manager')}")
-            if metadata.get('bid_manager_email'):
-                formatted_lines.append(f"Bid Manager Email: {metadata.get('bid_manager_email')}")
-
-        # Add all other metadata items (these come from metaData list)
-        formatted_lines.append("\nProject Metadata:")
+        # Add all attribute items
+        formatted_lines.append("\nProject Attributes:")
 
         # Exclude the basic fields we've already added
         basic_fields = {
-            'project_id', 'project_name', 'description', 'status',
-            'current_stage', 'opportunity_owner', 'amount', 'reference_number',
-            'bid_manager', 'bid_manager_email'
+            'project_id', 'project_name', 'description',
+            'reference_number', 'bid_manager'
         }
 
-        # Add all other metadata fields
+        # Add all other metadata fields (from attributes)
         for key, value in metadata.items():
-            if key not in basic_fields and not key.startswith('bid_manager_'):
+            if key not in basic_fields:
                 formatted_lines.append(f"{key}: {value}")
-
-        # Add bid manager user data if present
-        bid_manager_data = [(k, v) for k, v in metadata.items() if
-                            k.startswith('bid_manager_') and k != 'bid_manager_email']
-        if bid_manager_data:
-            formatted_lines.append("\nBid Manager Additional Data:")
-            for key, value in bid_manager_data:
-                clean_key = key.replace('bid_manager_', '').replace('_', ' ').title()
-                formatted_lines.append(f"{clean_key}: {value}")
 
         return "\n".join(formatted_lines).strip()
 
