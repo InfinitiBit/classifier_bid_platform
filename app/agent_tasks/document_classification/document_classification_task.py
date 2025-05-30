@@ -329,22 +329,35 @@ class DocumentClassificationTask:
             relevance = read_file_content(str(agents_dir / "relevance_analysis.txt"))
             metadata_matching = read_file_content(str(agents_dir / "metadata_matching.txt"))
 
-            # Extract final recommendation from metadata matching agent
-            is_relevant = "RELEVANT" in metadata_matching.upper() and "NOT_RELEVANT" not in metadata_matching.upper()
-
-            # Extract scores using regex patterns
+            # Extract relevance score using regex patterns
             import re
 
-            # Extract relevance score (look for RELEVANCE_SCORE: X pattern)
             relevance_score = 0.5  # default
-            score_match = re.search(r'RELEVANCE_SCORE:\s*(\d+)', relevance)
-            if score_match:
-                relevance_score = float(score_match.group(1)) / 10.0  # Convert to 0-1 scale
 
-            # Try to extract alignment score from metadata matching
+            # First try to extract alignment score from metadata matching (0-1 scale)
             alignment_score_match = re.search(r'ALIGNMENT_SCORE:\s*([\d.]+)', metadata_matching)
             if alignment_score_match:
                 relevance_score = float(alignment_score_match.group(1))
+                self.logger.info(f"Using alignment score: {relevance_score}")
+            else:
+                # Fallback to relevance score from relevance analysis (1-10 scale)
+                score_match = re.search(r'RELEVANCE_SCORE:\s*(\d+)', relevance)
+                if score_match:
+                    relevance_score = float(score_match.group(1)) / 10.0  # Convert to 0-1 scale
+                    self.logger.info(f"Using relevance score: {relevance_score}")
+
+            # APPLY THE THRESHOLD - This is the key change
+            is_relevant = relevance_score >= threshold
+
+            # Also extract agent's text-based recommendation for comparison
+            agent_recommendation = "RELEVANT" in metadata_matching.upper() and "NOT_RELEVANT" not in metadata_matching.upper()
+
+            # Log if threshold decision differs from agent recommendation
+            if is_relevant != agent_recommendation:
+                self.logger.warning(
+                    f"Threshold decision (relevant={is_relevant}, score={relevance_score:.2f}, threshold={threshold}) "
+                    f"differs from agent text recommendation (relevant={agent_recommendation})"
+                )
 
             # Extract classification reasons
             reasons = []
@@ -369,10 +382,13 @@ class DocumentClassificationTask:
                 key_matches = metadata_matching.split("KEY_MATCHES:")[-1].split("\n")[0].strip()
                 reasons.append(f"Key metadata matches: {key_matches[:150]}...")
 
-            # Add final recommendation reasoning
+            # Add threshold decision info
+            reasons.append(f"Score: {relevance_score:.2f} {'≥' if is_relevant else '<'} threshold {threshold}")
+
+            # Add final recommendation reasoning from agent
             if "FINAL_RECOMMENDATION:" in metadata_matching:
                 recommendation_line = metadata_matching.split("FINAL_RECOMMENDATION:")[-1].split("\n")[0].strip()
-                reasons.append(f"Final decision: {recommendation_line[:150]}...")
+                reasons.append(f"Agent recommendation: {recommendation_line[:150]}...")
 
             # Extract metadata matches and gaps
             metadata_matches = []
@@ -395,10 +411,12 @@ class DocumentClassificationTask:
 
             return {
                 "status": "completed",
-                "is_relevant": is_relevant,
+                "is_relevant": is_relevant,  # Now based on threshold comparison
                 "relevance_score": relevance_score,
                 "classification_reasons": reasons,
                 "processing_method": "full_agent_analysis",
+                "threshold_applied": threshold,  # Add this for transparency
+                "agent_recommendation": agent_recommendation,  # Include agent's text-based recommendation
                 "agent_results": {
                     "content_quality": content_quality,
                     "document_summary": document_summary,

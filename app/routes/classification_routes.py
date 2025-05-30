@@ -82,7 +82,7 @@ async def classify_document(request: DocumentClassificationRequest):
 
         # Create enhanced workflow instance - pass the raw project object
         # Default classification threshold if not provided
-        classification_threshold = 0.7
+        classification_threshold = 0.2
 
         workflow = DocumentClassificationWorkflow(
             task_id=request.taskId,

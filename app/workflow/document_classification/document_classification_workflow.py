@@ -45,7 +45,7 @@ class DocumentClassificationWorkflow:
         backend_url: str,
         file_path: str,
         project: Project,  # Changed from project_metadata dict to Project object
-        classification_threshold: float = 0.7
+        classification_threshold: float = 0.2
     ):
         """
         Initialize the document classification workflow.
