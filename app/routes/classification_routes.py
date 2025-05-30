@@ -57,16 +57,16 @@ async def classify_document(request: DocumentClassificationRequest):
             )
 
         logger.info(f"Starting document classification for task: {request.taskId}")
-        logger.info(f"Document URL: {request.document.FileUrl}")
-        logger.info(f"Document Reference: {request.document.Reference}")
+        logger.info(f"Document URL: {request.uploadedFile.fileUrl}")
+        logger.info(f"Document Reference: {request.uploadedFile.reference}")
         logger.info(f"Project: {request.project.opportunityName or request.project.projectName}")
 
         # Download document with enhanced error handling
         downloader = FileDownloader(base_dir=DOCUMENTS_DIR)
         download_result = await downloader.download_single_file(
             task_id=request.taskId,
-            file_url=request.document.FileUrl,
-            file_id=request.document.Reference or "document_to_classify"
+            file_url=request.uploadedFile.fileUrl,
+            file_id=request.uploadedFile.reference or "document_to_classify"
         )
 
         if download_result["status"] == "failed":
@@ -109,7 +109,7 @@ async def classify_document(request: DocumentClassificationRequest):
         detailed_status = {
             **response_data,
             "project_id": request.project.id,
-            "document_reference": request.document.Reference,
+            "document_reference": request.uploadedFile.reference,
             "timestamp": datetime.now().isoformat()
         }
 
