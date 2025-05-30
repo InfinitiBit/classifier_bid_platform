@@ -1,6 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from pydantic import BaseModel, Field
-
 
 class ClassificationResult(BaseModel):
     """Classification result details"""
@@ -9,7 +8,6 @@ class ClassificationResult(BaseModel):
     decisionDetails: str  # Why AI thinks it's invalid/irrelevant/etc
     relevancyPercentage: float = Field(ge=0.0, le=100.0)  # 0-100%
 
-
 class DocumentClassificationResponse(BaseModel):
     """Response model for document classification"""
     task_id: str
@@ -17,7 +15,6 @@ class DocumentClassificationResponse(BaseModel):
     status: str
     message: str
     error: Optional[str] = None
-
 
 class ClassificationStatusResponse(BaseModel):
     """Response model for classification status"""
