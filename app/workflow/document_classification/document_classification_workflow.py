@@ -250,7 +250,7 @@ class DocumentClassificationWorkflow:
                     task_name="content_extraction"
                 )
 
-                content_result = extract_document_content(self.file_path)
+                content_result = extract_document_content(self.file_path, task_id=self.task_id)
 
                 if not content_result["extraction_success"]:
                     error_msg = f"Content extraction failed: {content_result.get('error', 'Unknown error')}"

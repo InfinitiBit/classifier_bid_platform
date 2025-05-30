@@ -8,30 +8,14 @@ class MetaDataItem(BaseModel):
     attributeValue: str
 
 
-class UserData(BaseModel):
-    dataKey: str
-    dataValue: str
-
-
-class BidManager(BaseModel):
-    firstName: str
-    lastName: str
-    email: str
-    userData: List[UserData] = []
-
-
 class Project(BaseModel):
     id: str
-    referenceNumber: Optional[str] = None
+    referenceNo: Optional[str] = None
     opportunityName: Optional[str] = None
     description: Optional[str] = None
     projectName: Optional[str] = None
-    status: Optional[int] = None
-    bidManager: Optional[BidManager] = None
-    currentStage: Optional[str] = None
-    opportunityOwner: Optional[str] = None
-    amountInEur: Optional[str] = None
-    metaData: List[MetaDataItem] = []
+    bidManager: Optional[str] = None
+    attributes: List[MetaDataItem] = []
 
 
 class UploadedFile(BaseModel):
