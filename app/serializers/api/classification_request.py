@@ -34,14 +34,14 @@ class Project(BaseModel):
     metaData: List[MetaDataItem] = []
 
 
-class DocumentInfo(BaseModel):
+class UploadedFile(BaseModel):
     """Document information for classification"""
-    documentId: str
-    documentUrl: str
+    Reference: str
+    FileUrl: str
 
 
 class DocumentClassificationRequest(BaseModel):
     """Request model for document classification"""
     taskId: str
     project: Project
-    document: DocumentInfo
+    document: UploadedFile

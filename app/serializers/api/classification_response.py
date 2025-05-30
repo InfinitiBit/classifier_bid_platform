@@ -1,29 +1,36 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
-class ClassificationResult(BaseModel):
-    """Classification result details"""
-    fileId: str
-    summaryDecision: str  # 'Invalid', 'Irrelevant', 'Not Enough Content'
-    decisionDetails: str  # Why AI thinks it's invalid/irrelevant/etc
-    relevancyPercentage: float = Field(ge=0.0, le=100.0)  # 0-100%
 
-class DocumentClassificationResponse(BaseModel):
-    """Response model for document classification"""
-    task_id: str
-    project_id: str
+# For report + subtask & failed status like rfq
+class ReportDetailed(BaseModel):
+    """Single report detail item"""
+    attributeName: str
+    attributeFriendlyName: str
+    attributeValue: str
+
+
+class ClassificationResult(BaseModel):
+    """Classification result with completion report"""
+    isValid: bool
+    classificationReport: List[ReportDetailed]
+
+
+class ClassificationStatusResponse(BaseModel):
+    """Status update during workflow execution"""
+    status: str
+    message: str
+    taskName: Optional[str] = Field(None, description="Task/step name or 'task_failed' for errors")
+
+
+class ClassificationResultImmediate(BaseModel):
+    """Immediate classification result for errors or quick responses"""
+    taskId: str
     status: str
     message: str
     error: Optional[str] = None
 
-class ClassificationStatusResponse(BaseModel):
-    """Response model for classification status"""
-    task_id: str
-    project_id: str
-    status: str
-    is_relevant: Optional[bool] = None
-    relevance_score: Optional[float] = None
-    classification_reasons: Optional[List[str]] = None
-    processing_method: Optional[str] = None
-    timestamp: Optional[str] = None
-    error: Optional[str] = None
+    # Optional fields for completed classification results
+    summaryDecision: Optional[str] = None  # 'relevant', 'irrelevant', 'invalid', 'not_enough_content'
+    decisionDetails: Optional[str] = None  # Why AI thinks it's invalid/irrelevant/etc
+    relevancyPercentage: Optional[int] = None  # 0-100%
