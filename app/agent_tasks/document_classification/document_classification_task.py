@@ -116,7 +116,7 @@ class DocumentClassificationTask:
             if self.backend_url and self.task_id:
                 try:
                     requests.post(
-                        f"{self.backend_url.rstrip('/')}/analyzers/{self.task_id}/subtasks",
+                        f"{self.backend_url.rstrip('/')}/classifiers/{self.task_id}/subtasks",
                         json={"taskName": "Document Classification Analysis Started",
                               "taskFriendlyName": "AI agents analyzing document relevance"},
                         auth=("admin", "pass123"),

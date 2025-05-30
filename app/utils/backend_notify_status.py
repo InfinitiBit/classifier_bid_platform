@@ -12,7 +12,7 @@ async def notify_backend_status(backend_url: str, analysis_task_id: str, result:
         auth = aiohttp.BasicAuth(login="admin", password="pass123")
 
         async with aiohttp.ClientSession(auth=auth) as session:
-            endpoint = f"{backend_url.rstrip('/')}/analyzers/{analysis_task_id}/subtasks"
+            endpoint = f"{backend_url.rstrip('/')}/classifiers/{analysis_task_id}/subtasks"
             async with session.post(endpoint, json=result) as response:
                 if response.status != 200:
                     logger.error(
