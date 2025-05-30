@@ -22,9 +22,6 @@ def extract_document_content(file_path: str, task_id: str = None) -> Dict[str, A
     try:
         # Import PDF extractor from existing services
 
-        ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
-        sys.path.insert(0, str(ROOT_DIR))
-
         file_path_obj = Path(file_path)
 
         # Get file size

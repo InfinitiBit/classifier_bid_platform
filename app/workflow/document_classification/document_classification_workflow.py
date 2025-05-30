@@ -99,28 +99,15 @@ class DocumentClassificationWorkflow:
             "project_id": project.id,
             "project_name": project.projectName or project.opportunityName or "Unnamed Project",
             "description": project.description or "",
-            "status": project.status,
-            "current_stage": project.currentStage or "",
-            "opportunity_owner": project.opportunityOwner or "",
-            "amount": project.amountInEur or "",
-            "reference_number": project.referenceNumber or ""
+            "reference_number": project.referenceNo or "",
+            "bid_manager": project.bidManager or ""
         }
 
-        # Add all metadata items using attributeFriendlyName as key
-        if project.metaData:
-            for item in project.metaData:
+        # Add all attributes (previously metaData)
+        if project.attributes:
+            for item in project.attributes:
                 # Use attributeFriendlyName as the key for agent analysis
                 metadata[item.attributeFriendlyName] = item.attributeValue
-
-        # Add bid manager info if available
-        if project.bidManager:
-            metadata["bid_manager"] = f"{project.bidManager.firstName} {project.bidManager.lastName}"
-            metadata["bid_manager_email"] = project.bidManager.email
-
-            # Process bid manager userData if present
-            if project.bidManager.userData:
-                for user_data in project.bidManager.userData:
-                    metadata[f"bid_manager_{user_data.dataKey}"] = user_data.dataValue
 
         return metadata
 
@@ -268,6 +255,8 @@ class DocumentClassificationWorkflow:
                 document_content = content_result["content"]
                 file_size = content_result["file_size"]
 
+                # print("content result --------- ", content_result)
+
                 # Update workflow data
                 self.workflow_data["file_size"] = file_size
                 self.workflow_data["content_length"] = len(document_content)
@@ -380,12 +369,14 @@ class DocumentClassificationWorkflow:
                     task_name="agent_classification"
                 )
 
+                # print("document_content", document_content[:50])
                 classification_result = await self.classification_task.classify_document(
                     content=document_content,
                     project_metadata=self.project_metadata,
                     file_path=self.file_path,
                     classification_threshold=self.classification_threshold
                 )
+                logger.info("classification_result ------------------------- ", classification_result)
 
                 if classification_result.get("status") != "completed":
                     error_msg = f"Classification failed: {classification_result.get('error', 'Unknown error')}"

@@ -91,27 +91,6 @@ class DocumentClassificationTask:
         try:
             self.logger.info(f"Starting document classification for task: {self.task_id}")
 
-            # Quick bypass check for low-quality documents
-            file_size = None
-            if file_path:
-                try:
-                    file_size = Path(file_path).stat().st_size
-                except:
-                    pass
-
-            should_bypass, bypass_reason, quick_result = should_bypass_analysis(content, file_size)
-            
-            if should_bypass:
-                self.logger.info(f"Bypassing analysis: {bypass_reason}")
-                return {
-                    "status": "completed",
-                    "bypass_reason": bypass_reason,
-                    "is_relevant": quick_result["is_relevant"],
-                    "relevance_score": quick_result["relevance_score"],
-                    "classification_reasons": quick_result["classification_reasons"],
-                    "processing_time": "fast_bypass"
-                }
-
             # Notify backend of agent analysis start
             if self.backend_url and self.task_id:
                 try:
