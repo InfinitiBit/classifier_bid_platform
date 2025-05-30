@@ -224,8 +224,7 @@ class FileDownloader:
 
     async def download_single_file(
         self, 
-        task_id: str, 
-        project_id: str, 
+        task_id: str,
         file_url: str, 
         file_id: str = "document"
     ) -> Dict:
@@ -271,7 +270,6 @@ class FileDownloader:
                 # Save metadata for this single file
                 metadata = {
                     "task_id": task_id,
-                    "project_id": project_id,
                     "file_id": file_id,
                     "file_url": file_url,
                     "file_path": save_result["path"],
