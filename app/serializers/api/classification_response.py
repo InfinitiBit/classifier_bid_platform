@@ -13,7 +13,6 @@ class ReportDetailed(BaseModel):
 
 class ClassificationResult(BaseModel):
     """Classification result details"""
-    taskId: str
     isValid: bool
     classificationReport: List[ReportDetailed]
 
