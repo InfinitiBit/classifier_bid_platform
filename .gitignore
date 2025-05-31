@@ -39,3 +39,8 @@ ENV/
 .coverage
 htmlcov/
 .pytest_cache/
+
+
+*.txt
+*.json
+*.pdf
