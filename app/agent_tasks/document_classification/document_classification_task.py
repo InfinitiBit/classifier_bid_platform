@@ -74,7 +74,7 @@ class DocumentClassificationTask:
         content: str, 
         project_metadata: Dict[str, Any], 
         file_path: str = None,
-        classification_threshold: float = 0.7
+        classification_threshold: float = None
     ) -> Dict:
         """
         Classify document relevance using specialized agents.
@@ -212,36 +212,77 @@ class DocumentClassificationTask:
                 description=f"""
                 TODAY'S DATE: {current_time_str}
 
-                COMPARE document characteristics against project metadata criteria using the document summary and relevance analysis.
+                You are evaluating whether the extracted document matches the provided PROJECT METADATA for a bid/tender process.
 
-                EVALUATE matches between the document content and ALL project metadata fields provided below.
+                The extracted document should be of type: **RFP, RFQ, Technical Offer, Commercial Offer. Your task is to:
 
+                1. **Strictly compare** the project metadata with the document's content and intent also Document's Type.
+                2. Determine if the document addresses the key project requirements or aligns with its scope.
+
+                ---
+
+                Use the following steps for analysis:
+
+                ### A. DOCUMENT TYPE VALIDATION
+                - Determine the likely document type (e.g., RFP, RFQ, Technical Offer, Commercial Offer).
+                - Justify your classification based on structure, terminology, and intent.
+
+                ### B. METADATA FIELD MATCHING
                 For each metadata field:
-                1. Check if the concept/requirement is mentioned or addressed in the document
-                2. Assess how well the document aligns with that specific criterion
-                3. Note any exact matches, partial matches, or relevant mentions
+                - Check for **explicit mentions** (exact terms, phrases, values).
+                - Check for **implicit matches** (conceptual alignment or paraphrased mentions).
+                - Check alignment with **industry norms** or **domain-specific expectations** if not directly mentioned.
 
-                Consider ALL aspects:
-                - Direct mentions of metadata values in the document
-                - Conceptual alignment even if exact terms aren't used
-                - Industry/domain relevance based on metadata
-                - Technical requirements or specifications matching
-                - Budget/timeline compatibility if mentioned
-                - Geographic or location relevance
-                - Any other project-specific criteria
+                ### C. ALIGNMENT CHECK
+                Assess how well the document content aligns with the project metadata in terms of:
 
-                Format your response as:
-                METADATA_MATCHES: [List each metadata field and whether it matches]
-                ALIGNMENT_SCORE: [0.0-1.0] - Overall alignment score
-                KEY_MATCHES: [List the most important matches found]
-                MISSING_ELEMENTS: [List important metadata criteria not found in document]
-                FINAL_RECOMMENDATION: [RELEVANT/NOT_RELEVANT] - [detailed justification]
+                - **Technical requirements** (tools, standards, deliverables)
+                - **Scope of work** and specific tasks or services mentioned
+                - **Budget or cost structure**, if referenced
+                - **Timeline or schedule compatibility**
+                - **Geographic or regulatory criteria** (e.g., jurisdiction, location-specific rules)
+                - **Formal structure** and tone expected from the document type (e.g., a Technical Offer should describe solutions; an RFP should define needs)
 
-                Project Metadata:
+                Evaluate whether the document content matches the **intent and expectations** of the metadata criteria.
+
+                ---
+
+                ### D. RELEVANCE CHECK
+                Assess the **overall relevance of the document** with respect to the provided project metadata:
+
+                - Does the document clearly serve the same purpose as required by the metadata?
+                - Is the **document type** appropriate for the current bid stage?
+                - Does it offer meaningful content related to the project, or is it off-topic or generic?
+                - Are key concepts, themes, or goals from the metadata reflected in the document (either explicitly or conceptually)?
+
+                Use this check to determine whether the document is useful for progressing the bid/tender process.
+
+                ---
+
+                ### FORMAT YOUR RESPONSE AS:
+
+                DOCUMENT_TYPE: [Identified type with justification]
+
+                METADATA_MATCHES:
+                - [Field 1]: [Match Type: Exact / Partial / No Match] — [Short explanation]
+                - [Field 2]: ...
+
+                ALIGNMENT_SCORE: [0.0–1.0] — Overall document-to-metadata alignment
+                RELEVANCE_SCORE: [0.0–1.0] — How relevant the document is based on intent and stage
+                KEY_MATCHES: [List of most critical matched metadata fields or phrases]
+                MISSING_ELEMENTS: [Important project metadata not addressed in document]
+
+                FINAL_RECOMMENDATION: [Yes / No] — Should this document be considered a relevant match?
+                — [Provide detailed justification with evidence from document summary and content]
+
+                ---
+
+                PROJECT METADATA:
                 {metadata_str}
 
-                Use the document summary and previous analyses for evaluation.
-                """,
+                DOCUMENT SUMMARY:
+                    # Use the document summary and previous analyses for evaluation.
+                                """,
                 output_file=str(agents_dir / "metadata_matching.txt"),
                 expected_output="Detailed metadata comparison with final recommendation and overall score",
                 context=[content_quality_task, summarization_task, relevance_task]
@@ -332,26 +373,28 @@ class DocumentClassificationTask:
             # Extract relevance score using regex patterns
             import re
 
-            relevance_score = 0.5  # default
+            relevance_score = 0.0  # default
 
             # First try to extract alignment score from metadata matching (0-1 scale)
-            alignment_score_match = re.search(r'ALIGNMENT_SCORE:\s*([\d.]+)', metadata_matching)
-            if alignment_score_match:
-                relevance_score = float(alignment_score_match.group(1))
-                self.logger.info(f"Using alignment score: {relevance_score}")
+            # alignment_score_match = re.search(r'ALIGNMENT_SCORE:\s*([\d.]+)', metadata_matching)
+            relevance_score_match = re.search(r'RELEVANCE_SCORE:\s*([\d.]+)', metadata_matching)
+            if relevance_score_match:
+                relevance_score = float(relevance_score_match.group(1))
+                self.logger.info(f"Using relevance score: {relevance_score}")
             else:
-                # Fallback to relevance score from relevance analysis (1-10 scale)
-                score_match = re.search(r'RELEVANCE_SCORE:\s*(\d+)', relevance)
-                if score_match:
-                    relevance_score = float(score_match.group(1)) / 10.0  # Convert to 0-1 scale
-                    self.logger.info(f"Using relevance score: {relevance_score}")
+                self.logger.warning("Alignment score not found, falling back to relevance score.")
+                # # Fallback to relevance score from relevance analysis (1-10 scale)
+                # score_match = re.search(r'RELEVANCE_SCORE:\s*(\d+)', relevance)
+                # if score_match:
+                #     relevance_score = float(score_match.group(1)) / 10.0  # Convert to 0-1 scale
+                #     self.logger.info(f"Using relevance score: {relevance_score}")
 
             # APPLY THE THRESHOLD - This is the key change
             is_relevant = relevance_score >= threshold
 
             # Also extract agent's text-based recommendation for comparison
-            agent_recommendation = "RELEVANT" in metadata_matching.upper() and "NOT_RELEVANT" not in metadata_matching.upper()
-
+            # agent_recommendation = "RELEVANT" in metadata_matching.upper() and "NOT_RELEVANT" not in metadata_matching.upper()
+            agent_recommendation = "Yes" in metadata_matching and "No" not in metadata_matching
             # Log if threshold decision differs from agent recommendation
             if is_relevant != agent_recommendation:
                 self.logger.warning(
