@@ -373,7 +373,7 @@ class DocumentClassificationTask:
             # Extract relevance score using regex patterns
             import re
 
-            # relevance_score = 0.5  # default
+            relevance_score = 0.0  # default
 
             # First try to extract alignment score from metadata matching (0-1 scale)
             # alignment_score_match = re.search(r'ALIGNMENT_SCORE:\s*([\d.]+)', metadata_matching)
