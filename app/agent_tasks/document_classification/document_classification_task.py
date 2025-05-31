@@ -74,7 +74,6 @@ class DocumentClassificationTask:
         content: str, 
         project_metadata: Dict[str, Any], 
         file_path: str = None,
-        # classification_threshold: float = 0.7
         classification_threshold: float = None
     ) -> Dict:
         """
@@ -210,40 +209,6 @@ class DocumentClassificationTask:
             # Task 4: Metadata Matching Analysis
             metadata_matching_task = Task(
                 agent=self.metadata_matching_agent,
-                # description=f"""
-                # TODAY'S DATE: {current_time_str}
-
-                # COMPARE document characteristics against project metadata criteria using the document summary and relevance analysis.
-
-                # EVALUATE matches between the document content and ALL project metadata fields provided below.
-
-                # For each metadata field:
-                # 1. Check if the concept/requirement is mentioned or addressed in the document
-                # 2. Assess how well the document aligns with that specific criterion
-                # 3. Note any exact matches, partial matches, or relevant mentions
-
-                # Consider ALL aspects:
-                # - Direct mentions of metadata values in the document
-                # - Conceptual alignment even if exact terms aren't used
-                # - Industry/domain relevance based on metadata
-                # - Technical requirements or specifications matching
-                # - Budget/timeline compatibility if mentioned
-                # - Geographic or location relevance
-                # - Any other project-specific criteria
-
-                # Format your response as:
-                # METADATA_MATCHES: [List each metadata field and whether it matches]
-                # ALIGNMENT_SCORE: [0.0-1.0] - Overall alignment score
-                # RELEVANCE_SCORE: [0.0-1.0] - Relevance score based on metadata matching where 0.0 is no match and 1.0 is perfect match 
-                # KEY_MATCHES: [List the most important matches found]
-                # MISSING_ELEMENTS: [List important metadata criteria not found in document]
-                # FINAL_RECOMMENDATION: [Yes/No] - [detailed justification]
-
-                # Project Metadata:
-                # {metadata_str}
-
-                # Use the document summary and previous analyses for evaluation.
-                # """,
                 description=f"""
                 TODAY'S DATE: {current_time_str}
 
