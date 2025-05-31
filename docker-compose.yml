@@ -10,10 +10,8 @@ services:
       - "8001:8001"
     volumes:
       - .:/app
-      - ./logs:/app/logs # Fixed: Changed the volume mount path
+      - ./logs:/app/logs
+    env_file:
+      - .env  # This will load all variables from .env file
     environment:
-      - CHUNK_SIZE=${CHUNK_SIZE}
-      - CHUNK_OVERLAP=${CHUNK_OVERLAP}
-      - LOG_LEVEL=${LOG_LEVEL}
-      - LOG_FILE=/app/logs/app.log # Fixed: Changed to absolute path
-      - RATE_LIMIT_PER_MINUTE=${RATE_LIMIT_PER_MINUTE}
+      - LOG_FILE=/app/logs/app.log
